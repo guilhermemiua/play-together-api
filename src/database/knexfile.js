@@ -1,10 +1,11 @@
-const path = require('path')
+const path = require('path');
 
 require('dotenv').config({
-  path: process.env.NODE_ENV === 'test'
-    ? path.join(__dirname, '../../.env.test')
-    : path.join(__dirname, '../../.env')
-})
+  path:
+    process.env.NODE_ENV === 'test'
+      ? path.join(__dirname, '../../.env.test')
+      : path.join(__dirname, '../../.env'),
+});
 
 module.exports = {
   client: process.env.DB_CLIENT || 'pg',
@@ -12,18 +13,18 @@ module.exports = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
+    database: process.env.DB_DATABASE,
   },
   pool: {
     min: 2,
-    max: 10
+    max: 10,
   },
   migrations: {
     tableName: 'knex_migrations',
-    directory: 'migrations'
+    directory: 'migrations',
   },
   seeds: {
-    directory: 'seeds'
+    directory: 'seeds',
   },
-  timezone: 'UTC'
-}
+  timezone: 'UTC',
+};
