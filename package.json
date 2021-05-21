@@ -1,28 +1,32 @@
 {
-  "name": "tcc-api",
+  "name": "web-2-projeto-2",
   "version": "1.0.0",
+  "engines": {
+    "node": "15.x"
+  },
   "main": "index.js",
-  "repository": "git@github.com:guilhermemiua/tcc-api.git",
+  "repository": "git@github.com:guilhermemiua/web-2-projeto-2.git",
   "author": "guilhermemiua <guilhermemiua@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "start": "NODE_ENV=production node src/server",
     "start:dev": "NODE_ENV=test nodemon src/server",
-    "migration:make": "NODE_ENV=test knex --knexfile src/database/knexfile.js migrate:make",
-    "migration:latest": "NODE_ENV=test knex --knexfile src/database/knexfile.js migrate:latest",
-    "migration:rollback": "NODE_ENV=test knex --knexfile src/database/knexfile.js migrate:rollback",
-    "migration:run": "NODE_ENV=test knex --knexfile src/database/knexfile.js migrate:up",
-    "seed:make": "NODE_ENV=test knex --knexfile src/database/knexfile.js seed:make",
-    "seed:run": "NODE_ENV=test knex --knexfile src/database/knexfile.js seed:run"
+    "migration:make": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:make",
+    "migration:latest": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:latest",
+    "migration:rollback": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:rollback",
+    "migration:run": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:up",
+    "seed:make": "NODE_ENV=test knex --knexfile src/config/knexfile.js seed:make",
+    "seed:run": "NODE_ENV=test knex --knexfile src/config/knexfile.js seed:run"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
+    "dotenv": "^9.0.1",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.95.4",
-    "nodemailer": "^6.5.0",
-    "pg": "^8.5.1"
+    "multer": "^1.4.2",
+    "pg": "^8.6.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",

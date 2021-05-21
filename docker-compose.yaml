@@ -1,0 +1,52 @@
+version: '3.5'
+
+services:
+  node:
+    image: node:alpine
+    ports:
+      - "3333:3000"
+    volumes:
+      - .:/app
+    working_dir: /app
+    depends_on:
+      - postgres
+    networks:
+      - postgres
+    command: npm start
+
+  postgres:
+    container_name: tcc-pg
+    image: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 123456
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: tcc-pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: guilhermemiua@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: 123456
+    volumes:
+       - pgadmin:/root/.pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:

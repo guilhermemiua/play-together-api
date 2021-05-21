@@ -19,6 +19,7 @@
     "implicit-arrow-linebreak": "off",
     "function-paren-newline": "off",
     "comma-dangle": "off",
-    "camelcase": "off
+    "camelcase": "off",
+    "class-methods-use-this": "off"
   }
 }
