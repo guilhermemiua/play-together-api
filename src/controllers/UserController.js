@@ -12,14 +12,14 @@ class UserController {
         password,
         age,
         gender,
-        is_email_verified,
+        city,
+        state,
       } = request.body;
 
       // Verify if e-mail is already registered
-      const existsEmail = await connection
+      const existsEmail = await connection('users')
         .select('id', 'email')
         .where('email', email)
-        .from('users')
         .first();
 
       if (existsEmail) {
@@ -29,28 +29,20 @@ class UserController {
       }
 
       // Hashing password
-      const hashPassword = await bcrypt.hash(password, 10);
+      const passwordHashed = await this.hashPassword(password);
 
-      const user = await connection
-        .returning([
-          'id',
-          'first_name',
-          'last_name',
-          'email',
-          'age',
-          'gender',
-          'is_email_verified',
-        ])
+      const user = await connection('users')
         .insert({
           first_name,
           last_name,
           email,
-          password: hashPassword,
+          password: passwordHashed,
           age,
           gender,
-          is_email_verified,
+          city,
+          state,
         })
-        .into('users');
+        .returning(['*']);
 
       return response.status(201).send(user[0]);
     } catch (error) {
@@ -62,26 +54,16 @@ class UserController {
     try {
       const { email, password } = request.body;
 
-      const user = await connection
-        .select([
-          'id',
-          'first_name',
-          'last_name',
-          'password',
-          'email',
-          'age',
-          'gender',
-          'is_email_verified',
-        ])
+      const user = await connection('users')
+        .select(['*'])
         .where('email', email)
-        .from('users')
         .first();
 
       // Never tell the user if the e-mail is incorrect or the password
       if (!user) {
         return response
           .status(404)
-          .send({ message: 'E-mail or Password incorrect.' });
+          .send({ message: 'E-mail or Password incorrect' });
       }
 
       // Authenticate user password
@@ -91,17 +73,113 @@ class UserController {
       if (!isValidPassword) {
         return response
           .status(400)
-          .send({ message: 'E-mail or Password incorrect.' });
+          .send({ message: 'E-mail or Password incorrect' });
       }
 
       const token = await jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
 
       delete user.password;
 
-      return response.status(201).send({ token, user });
+      return response.status(200).send({ token, user });
     } catch (error) {
+      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
+  }
+
+  async update(request, response) {
+    try {
+      const { first_name, last_name, age, gender, city, state } = request.body;
+
+      const user = await connection('users')
+        .select(['*'])
+        .where('id', request.userId)
+        .first();
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      await connection('users')
+        .update({
+          first_name,
+          last_name,
+          age,
+          gender,
+          city,
+          state,
+        })
+        .where('id', request.userId);
+
+      return response
+        .status(200)
+        .send({ message: 'User successfully updated' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async updatePassword(request, response) {
+    try {
+      const { password } = request.body;
+
+      const user = await connection('users')
+        .select(['*'])
+        .where('id', request.userId)
+        .first();
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const passwordHashed = await this.hashPassword(password);
+
+      await connection('users')
+        .update({
+          password: passwordHashed,
+        })
+        .where('id', request.userId);
+
+      return response
+        .status(200)
+        .send({ message: 'Password successfully updated' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async updateEmail(request, response) {
+    try {
+      const { email } = request.body;
+
+      const user = await connection('users')
+        .select(['*'])
+        .where('id', request.userId)
+        .first();
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      await connection('users')
+        .update({
+          email,
+        })
+        .where('id', request.userId);
+
+      return response
+        .status(200)
+        .send({ message: 'Email successfully updated' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async hashPassword(password) {
+    return bcrypt.hash(password, 10);
   }
 }
 

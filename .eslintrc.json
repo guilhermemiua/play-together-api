@@ -20,6 +20,8 @@
     "function-paren-newline": "off",
     "comma-dangle": "off",
     "camelcase": "off",
-    "class-methods-use-this": "off"
+    "class-methods-use-this": "off",
+    "object-curly-newline": "off",
+    "consistent-return": "off"
   }
 }

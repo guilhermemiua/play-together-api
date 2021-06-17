@@ -3,6 +3,9 @@ exports.up = function (knex) {
     table.increments();
     table.string('first_name').notNullable();
     table.string('last_name').notNullable();
+    table.string('profile_image');
+    table.string('city').notNullable();
+    table.string('state').notNullable();
     table.string('email').notNullable();
     table.string('password').notNullable();
     table.integer('age').notNullable();
