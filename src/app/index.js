@@ -19,6 +19,7 @@ class App {
       })
     );
     this.express.use(cors());
+    this.express.use('/uploads', express.static('uploads'));
   }
 
   routes() {

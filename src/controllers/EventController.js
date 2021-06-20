@@ -15,17 +15,19 @@ class EventController {
 
   async findAll(request, response) {
     try {
-      const { sport } = request.query;
+      const { offset, limit } = request.params;
 
-      const query = connection;
+      const query = connection('events');
 
-      if (sport) {
-        query.whereRaw("LOWER(name) LIKE '%' || LOWER(?) || '%' ", sport);
+      if (offset && limit) {
+        const events = await query.limit(limit).offset(offset);
+
+        return response.status(200).send(events);
       }
 
-      const events = await query.from('events');
+      const events = await query.fetch();
 
-      return response.status(200).send(events);
+      return response.status(201).send(events);
     } catch (error) {
       return response.status(500).send({ message: 'Internal server error' });
     }
@@ -36,22 +38,29 @@ class EventController {
       const {
         sport,
         local,
+        state,
+        city,
         date,
         start_time,
         end_time,
         players_quantity,
-        user_id,
       } = request.body;
+      const { userId } = request;
+
+      // TODO: START_TIME < END_TIME
+      // TODO: VALID DATE + TIME
 
       const event = await connection('events')
         .insert({
           sport,
           local,
+          state,
+          city,
           date,
           start_time,
           end_time,
           players_quantity,
-          user_id,
+          user_id: userId,
         })
         .returning('*');
 

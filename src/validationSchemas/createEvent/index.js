@@ -2,6 +2,8 @@ const yup = require('yup');
 
 const createEventSchema = yup.object({
   local: yup.string().required(),
+  city: yup.string().required(),
+  state: yup.string().required(),
   date: yup.string().required(),
   start_time: yup.string().required(),
   end_time: yup.string().required(),

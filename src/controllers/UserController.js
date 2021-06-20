@@ -1,5 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 const connection = require('../database/connection');
 
 class UserController {
@@ -90,6 +92,8 @@ class UserController {
   async update(request, response) {
     try {
       const { first_name, last_name, age, gender, city, state } = request.body;
+      const { file } = request;
+      const profile_image = file ? file.filename : undefined;
 
       const user = await connection('users')
         .select(['*'])
@@ -100,7 +104,38 @@ class UserController {
         return response.status(404).send({ message: 'User not found' });
       }
 
-      await connection('users')
+      // if (file) {
+      //   if (user.profile_image) {
+      //     await fs.unlinkSync(
+      //       path.join(__dirname, `../../uploads/${user.profile_image}`)
+      //     );
+      //   }
+
+      //   await connection('users')
+      //     .update({
+      //       first_name,
+      //       last_name,
+      //       age,
+      //       gender,
+      //       city,
+      //       state,
+      //       profile_image: file.filename,
+      //     })
+      //     .where('id', request.userId);
+      // } else {
+      //   await connection('users')
+      //     .update({
+      //       first_name,
+      //       last_name,
+      //       age,
+      //       gender,
+      //       city,
+      //       state,
+      //     })
+      //     .where('id', request.userId);
+      // }
+
+      const updatedUser = await connection('users')
         .update({
           first_name,
           last_name,
@@ -108,12 +143,18 @@ class UserController {
           gender,
           city,
           state,
+          profile_image,
         })
-        .where('id', request.userId);
+        .where('id', request.userId)
+        .returning('*');
 
-      return response
-        .status(200)
-        .send({ message: 'User successfully updated' });
+      if (file && user.profile_image) {
+        await fs.unlinkSync(
+          path.join(__dirname, `../../uploads/${user.profile_image}`)
+        );
+      }
+
+      return response.status(200).send(updatedUser[0]);
     } catch (error) {
       console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
@@ -145,7 +186,6 @@ class UserController {
         .status(200)
         .send({ message: 'Password successfully updated' });
     } catch (error) {
-      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
@@ -173,7 +213,6 @@ class UserController {
         .status(200)
         .send({ message: 'Email successfully updated' });
     } catch (error) {
-      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
