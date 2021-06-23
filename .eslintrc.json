@@ -22,6 +22,8 @@
     "camelcase": "off",
     "class-methods-use-this": "off",
     "object-curly-newline": "off",
-    "consistent-return": "off"
+    "consistent-return": "off",
+    "global-require": "off",
+    "operator-linebreak": "off"
   }
 }

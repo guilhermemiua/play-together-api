@@ -15,6 +15,7 @@ const updatePasswordSchema = require('../../validationSchemas/updatePassword');
 const routes = express.Router();
 const upload = multer({ dest: 'uploads/' });
 
+routes.get('/me', (request, response) => UserController.me(request, response));
 routes.put('/user', upload.single('profile_image'), (request, response) =>
   UserController.update(request, response)
 );

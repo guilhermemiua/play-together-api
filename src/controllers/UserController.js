@@ -2,9 +2,28 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
-const connection = require('../database/connection');
+const { User } = require('../models');
 
 class UserController {
+  async me(request, response) {
+    try {
+      const { userId } = request;
+
+      const user = await User.query()
+        .findById(userId)
+        .withGraphFetched('[city, state]')
+        .omit('password');
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found.' });
+      }
+
+      return response.status(200).send(user);
+    } catch (error) {
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
   async register(request, response) {
     try {
       const {
@@ -14,39 +33,38 @@ class UserController {
         password,
         age,
         gender,
-        city,
-        state,
+        city_id,
+        state_id,
       } = request.body;
 
       // Verify if e-mail is already registered
-      const existsEmail = await connection('users')
-        .select('id', 'email')
-        .where('email', email)
-        .first();
+      const existsEmail = await User.query().findOne({
+        email,
+      });
 
       if (existsEmail) {
         return response
           .status(400)
-          .send({ message: 'E-mail is already being used.' });
+          .send({ message: 'Email is already being used.' });
       }
 
       // Hashing password
       const passwordHashed = await this.hashPassword(password);
 
-      const user = await connection('users')
-        .insert({
-          first_name,
-          last_name,
-          email,
-          password: passwordHashed,
-          age,
-          gender,
-          city,
-          state,
-        })
-        .returning(['*']);
+      const user = await User.query().insertAndFetch({
+        first_name,
+        last_name,
+        email,
+        password: passwordHashed,
+        age,
+        gender,
+        city_id,
+        state_id,
+      });
 
-      return response.status(201).send(user[0]);
+      user.$omit('password');
+
+      return response.status(201).send(user);
     } catch (error) {
       return response.status(500).send({ message: 'Internal server error' });
     }
@@ -56,16 +74,15 @@ class UserController {
     try {
       const { email, password } = request.body;
 
-      const user = await connection('users')
-        .select(['*'])
-        .where('email', email)
-        .first();
+      const user = await User.query().findOne({
+        email,
+      });
 
       // Never tell the user if the e-mail is incorrect or the password
       if (!user) {
         return response
           .status(404)
-          .send({ message: 'E-mail or Password incorrect' });
+          .send({ message: 'Email or Password incorrect' });
       }
 
       // Authenticate user password
@@ -75,78 +92,42 @@ class UserController {
       if (!isValidPassword) {
         return response
           .status(400)
-          .send({ message: 'E-mail or Password incorrect' });
+          .send({ message: 'Email or Password incorrect' });
       }
 
       const token = await jwt.sign({ userId: user.id }, process.env.JWT_SECRET);
 
-      delete user.password;
+      user.$omit('password');
 
       return response.status(200).send({ token, user });
     } catch (error) {
-      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
 
   async update(request, response) {
     try {
-      const { first_name, last_name, age, gender, city, state } = request.body;
+      const { first_name, last_name, age, gender, city_id, state_id } =
+        request.body;
       const { file } = request;
       const profile_image = file ? file.filename : undefined;
+      const { userId } = request;
 
-      const user = await connection('users')
-        .select(['*'])
-        .where('id', request.userId)
-        .first();
+      const user = await User.query().findById(userId);
 
       if (!user) {
         return response.status(404).send({ message: 'User not found' });
       }
 
-      // if (file) {
-      //   if (user.profile_image) {
-      //     await fs.unlinkSync(
-      //       path.join(__dirname, `../../uploads/${user.profile_image}`)
-      //     );
-      //   }
-
-      //   await connection('users')
-      //     .update({
-      //       first_name,
-      //       last_name,
-      //       age,
-      //       gender,
-      //       city,
-      //       state,
-      //       profile_image: file.filename,
-      //     })
-      //     .where('id', request.userId);
-      // } else {
-      //   await connection('users')
-      //     .update({
-      //       first_name,
-      //       last_name,
-      //       age,
-      //       gender,
-      //       city,
-      //       state,
-      //     })
-      //     .where('id', request.userId);
-      // }
-
-      const updatedUser = await connection('users')
-        .update({
-          first_name,
-          last_name,
-          age,
-          gender,
-          city,
-          state,
-          profile_image,
-        })
-        .where('id', request.userId)
-        .returning('*');
+      const updatedUser = await User.query().updateAndFetchById(userId, {
+        first_name,
+        last_name,
+        age,
+        gender,
+        city_id,
+        state_id,
+        profile_image,
+      });
 
       if (file && user.profile_image) {
         await fs.unlinkSync(
@@ -156,7 +137,6 @@ class UserController {
 
       return response.status(200).send(updatedUser[0]);
     } catch (error) {
-      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
@@ -164,11 +144,9 @@ class UserController {
   async updatePassword(request, response) {
     try {
       const { password } = request.body;
+      const { userId } = request;
 
-      const user = await connection('users')
-        .select(['*'])
-        .where('id', request.userId)
-        .first();
+      const user = await User.query().findById(userId);
 
       if (!user) {
         return response.status(404).send({ message: 'User not found' });
@@ -176,11 +154,9 @@ class UserController {
 
       const passwordHashed = await this.hashPassword(password);
 
-      await connection('users')
-        .update({
-          password: passwordHashed,
-        })
-        .where('id', request.userId);
+      await User.query().findById(userId).update({
+        password: passwordHashed,
+      });
 
       return response
         .status(200)
@@ -193,21 +169,33 @@ class UserController {
   async updateEmail(request, response) {
     try {
       const { email } = request.body;
+      const { userId } = request;
 
-      const user = await connection('users')
-        .select(['*'])
-        .where('id', request.userId)
-        .first();
+      const user = await User.query().findById(userId);
 
       if (!user) {
         return response.status(404).send({ message: 'User not found' });
       }
 
-      await connection('users')
-        .update({
-          email,
-        })
-        .where('id', request.userId);
+      if (user.email === email) {
+        return response
+          .status(400)
+          .send({ message: 'Email cannot be equal to current email.' });
+      }
+
+      // Verify if e-mail is already registered
+      const existsEmail = await User.query().findOne({
+        email,
+      });
+
+      if (existsEmail) {
+        return response
+          .status(400)
+          .send({ message: 'Email is already being used.' });
+      }
+      await User.query().findById(userId).update({
+        email,
+      });
 
       return response
         .status(200)
