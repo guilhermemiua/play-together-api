@@ -137,6 +137,7 @@ class UserController {
 
       return response.status(200).send(updatedUser[0]);
     } catch (error) {
+      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
