@@ -9,6 +9,8 @@ const UserController = require('../../controllers/UserController');
 const createEventSchema = require('../../validationSchemas/createEvent');
 const updateEmailSchema = require('../../validationSchemas/updateEmail');
 const updatePasswordSchema = require('../../validationSchemas/updatePassword');
+const joinEventSchema = require('../../validationSchemas/joinEvent');
+const disjoinEventSchema = require('../../validationSchemas/disjoinEvent');
 
 const routes = express.Router();
 
@@ -45,6 +47,14 @@ routes.get('/event/:id', (request, response) =>
 );
 routes.get('/event', (request, response) =>
   EventController.findAll(request, response)
+);
+routes.post('/event/join', validator(joinEventSchema), (request, response) =>
+  EventController.joinUser(request, response)
+);
+routes.post(
+  '/event/disjoin',
+  validator(disjoinEventSchema),
+  (request, response) => EventController.disjoinUser(request, response)
 );
 
 module.exports = routes;

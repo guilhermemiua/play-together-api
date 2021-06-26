@@ -9,7 +9,7 @@ class User extends Model {
   }
 
   static get relationMappings() {
-    const { City, State } = require('../index');
+    const { City, State, EventUser, Event } = require('../index');
 
     return {
       city: {
@@ -26,6 +26,19 @@ class User extends Model {
         join: {
           from: 'users.state_id',
           to: 'states.id',
+        },
+      },
+      events: {
+        relation: Model.ManyToManyRelation,
+        modelClass: Event,
+        join: {
+          from: 'users.id',
+          through: {
+            from: 'event_users.user_id',
+            to: 'event_users.event_id',
+            modelClass: EventUser,
+          },
+          to: 'events.id',
         },
       },
     };
