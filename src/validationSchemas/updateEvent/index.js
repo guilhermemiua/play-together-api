@@ -1,8 +1,7 @@
 const { isSameDay, isAfter } = require('date-fns');
 const yup = require('yup');
 
-const createEventSchema = yup.object({
-  sport: yup.string().required(),
+const updateEventSchema = yup.object({
   state_id: yup.string().required(),
   city_id: yup.string().required(),
   local: yup.string().required(),
@@ -28,4 +27,4 @@ const createEventSchema = yup.object({
   players_quantity: yup.string().required(),
 });
 
-module.exports = createEventSchema;
+module.exports = updateEventSchema;

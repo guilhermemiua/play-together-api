@@ -77,6 +77,98 @@ class EventController {
     }
   }
 
+  async update(request, response) {
+    try {
+      const {
+        local,
+        state_id,
+        city_id,
+        date,
+        start_time,
+        end_time,
+        players_quantity,
+      } = request.body;
+      const { userId } = request;
+      const { id } = request.params;
+
+      const event = await Event.query().findById(id);
+
+      console.log(event);
+
+      if (!event) {
+        return response.status(404).send({ message: 'Event not found' });
+      }
+
+      if (event.user_id !== userId) {
+        return response
+          .status(400)
+          .send({ message: 'User is not owner of the event' });
+      }
+
+      const eventParticipants = await EventUser.query().where('event_id', id);
+
+      if (players_quantity < eventParticipants.length + 1) {
+        return response.status(400).send({
+          message: `Event has already ${
+            eventParticipants.length + 1
+          } participants`,
+        });
+      }
+
+      await Event.query()
+        .update({
+          local,
+          state_id,
+          city_id,
+          date,
+          start_time,
+          end_time,
+          players_quantity,
+        })
+        .where('id', id);
+
+      return response
+        .status(200)
+        .send({ message: 'Event updated successfully!' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async delete(request, response) {
+    try {
+      const { id } = request.params;
+      const { userId } = request;
+
+      const user = await User.query().findById(userId);
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const event = await Event.query().findById(id);
+
+      if (!event) {
+        return response.status(404).send({ message: 'Event not found' });
+      }
+
+      if (event.user_id !== userId) {
+        return response
+          .status(400)
+          .send({ message: 'User is not owner of the event' });
+      }
+      await Event.query().deleteById(id);
+
+      return response
+        .status(200)
+        .send({ message: 'Event deleted successfully!' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
   async joinUser(request, response) {
     try {
       const { event_id } = request.body;

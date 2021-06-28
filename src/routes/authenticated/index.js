@@ -7,6 +7,7 @@ const validator = require('../../middlewares/validator');
 const EventController = require('../../controllers/EventController');
 const UserController = require('../../controllers/UserController');
 const createEventSchema = require('../../validationSchemas/createEvent');
+const updateEventSchema = require('../../validationSchemas/updateEvent');
 const updateEmailSchema = require('../../validationSchemas/updateEmail');
 const updatePasswordSchema = require('../../validationSchemas/updatePassword');
 const joinEventSchema = require('../../validationSchemas/joinEvent');
@@ -42,8 +43,14 @@ routes.put(
 routes.post('/event', validator(createEventSchema), (request, response) =>
   EventController.create(request, response)
 );
+routes.put('/event/:id', validator(updateEventSchema), (request, response) =>
+  EventController.update(request, response)
+);
 routes.get('/event/:id', (request, response) =>
   EventController.findById(request, response)
+);
+routes.delete('/event/:id', (request, response) =>
+  EventController.delete(request, response)
 );
 routes.get('/event', (request, response) =>
   EventController.findAll(request, response)
