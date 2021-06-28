@@ -93,8 +93,6 @@ class EventController {
 
       const event = await Event.query().findById(id);
 
-      console.log(event);
-
       if (!event) {
         return response.status(404).send({ message: 'Event not found' });
       }
@@ -159,6 +157,57 @@ class EventController {
           .send({ message: 'User is not owner of the event' });
       }
       await Event.query().deleteById(id);
+
+      return response
+        .status(200)
+        .send({ message: 'Event deleted successfully!' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async removeUser(request, response) {
+    try {
+      const { event_id, user_id } = request.params;
+      const { userId } = request;
+
+      const owner = await User.query().findById(userId);
+
+      if (!owner) {
+        return response.status(404).send({ message: 'Owner not found' });
+      }
+
+      const userToRemove = await User.query().findById(userId);
+
+      if (!userToRemove) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const event = await Event.query().findById(event_id);
+
+      if (!event) {
+        return response.status(404).send({ message: 'Event not found' });
+      }
+
+      if (event.user_id !== userId) {
+        return response
+          .status(400)
+          .send({ message: 'User is not owner of the event' });
+      }
+
+      const existUserInEvent = await Event.query()
+        .findById(event_id)
+        .whereExists(Event.relatedQuery('users').where('user_id', user_id));
+
+      if (!existUserInEvent) {
+        return response.status(400).send({ message: "User isn't  in event" });
+      }
+
+      await User.relatedQuery('events')
+        .for(user_id)
+        .unrelate()
+        .where('event_id', event_id);
 
       return response
         .status(200)
@@ -256,7 +305,10 @@ class EventController {
         return response.status(400).send({ message: "User isn't  in event" });
       }
 
-      await User.relatedQuery('events').for(userId).unrelate();
+      await User.relatedQuery('events')
+        .for(userId)
+        .unrelate()
+        .where('event_id', event_id);
 
       return response.status(200).send({ message: 'User joined event' });
     } catch (error) {

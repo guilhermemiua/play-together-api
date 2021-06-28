@@ -63,5 +63,8 @@ routes.post(
   validator(disjoinEventSchema),
   (request, response) => EventController.disjoinUser(request, response)
 );
+routes.delete('/event/:event_id/user/:user_id', (request, response) =>
+  EventController.removeUser(request, response)
+);
 
 module.exports = routes;
