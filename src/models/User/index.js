@@ -9,7 +9,13 @@ class User extends Model {
   }
 
   static get relationMappings() {
-    const { City, State, EventUser, Event } = require('../index');
+    const {
+      City,
+      State,
+      EventUser,
+      Event,
+      FriendRequest,
+    } = require('../index');
 
     return {
       city: {
@@ -39,6 +45,32 @@ class User extends Model {
             modelClass: EventUser,
           },
           to: 'events.id',
+        },
+      },
+      sent_friend_requests: {
+        relation: Model.ManyToManyRelation,
+        modelClass: User,
+        join: {
+          from: 'users.id',
+          through: {
+            from: 'friend_requests.sender_id',
+            to: 'friend_requests.receiver_id',
+            modelClass: FriendRequest,
+          },
+          to: 'users.id',
+        },
+      },
+      received_friend_requests: {
+        relation: Model.ManyToManyRelation,
+        modelClass: User,
+        join: {
+          from: 'users.id',
+          through: {
+            from: 'friend_requests.receiver_id',
+            to: 'friend_requests.sender_id',
+            modelClass: FriendRequest,
+          },
+          to: 'users.id',
         },
       },
     };

@@ -11,7 +11,10 @@ class StateController {
       }
 
       if (offset && limit) {
-        const states = await query.page(offset, limit);
+        const states = await query.page(
+          parseInt(offset, 10),
+          parseInt(limit, 10)
+        );
 
         return response.status(200).send(states);
       }

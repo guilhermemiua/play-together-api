@@ -1,6 +1,6 @@
-const { Event, User, EventUser } = require('../models');
+const { Event, User, FriendRequest } = require('../models');
 
-class EventController {
+class FriendRequestController {
   async findById(request, response) {
     try {
       const { id } = request.params;
@@ -27,6 +27,7 @@ class EventController {
       const query = Event.query().withGraphFetched(
         '[user, city, state, users]'
       );
+
       if (offset && limit) {
         const events = await query.page(
           parseInt(offset, 10),
@@ -105,7 +106,10 @@ class EventController {
           .send({ message: 'User is not owner of the event' });
       }
 
-      const eventParticipants = await EventUser.query().where('event_id', id);
+      const eventParticipants = await FriendRequest.query().where(
+        'event_id',
+        id
+      );
 
       if (players_quantity < eventParticipants.length + 1) {
         return response.status(400).send({
@@ -239,7 +243,7 @@ class EventController {
           .send({ message: 'User is owner of the event' });
       }
 
-      const eventParticipants = await EventUser.query().where(
+      const eventParticipants = await FriendRequest.query().where(
         'event_id',
         event_id
       );
@@ -320,4 +324,4 @@ class EventController {
   }
 }
 
-module.exports = new EventController();
+module.exports = new FriendRequestController();

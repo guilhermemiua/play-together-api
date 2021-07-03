@@ -25,6 +25,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
 routes.get('/me', (request, response) => UserController.me(request, response));
 routes.put('/me', upload.single('profile_image'), (request, response) =>
   UserController.update(request, response)
@@ -40,6 +41,19 @@ routes.put(
   (request, response) => UserController.updatePassword(request, response)
 );
 
+routes.get('/user', (request, response) =>
+  UserController.findAll(request, response)
+);
+
+routes.post('/friend-request', (request, response) =>
+  UserController.sendFriendRequest(request, response)
+);
+routes.get('/friend-request/sent', (request, response) =>
+  UserController.getSentFriendRequests(request, response)
+);
+routes.get('/friend-request/received', (request, response) =>
+  UserController.getReceivedFriendRequests(request, response)
+);
 routes.post('/event', validator(createEventSchema), (request, response) =>
   EventController.create(request, response)
 );

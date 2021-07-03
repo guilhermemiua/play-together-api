@@ -16,7 +16,10 @@ class CityController {
       }
 
       if (offset && limit) {
-        const cities = await query.page(offset, limit);
+        const cities = await query.page(
+          parseInt(offset, 10),
+          parseInt(limit, 10)
+        );
 
         return response.status(200).send(cities);
       }

@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
-const { User } = require('../models');
+const { User, FriendRequest } = require('../models');
 
 class UserController {
   async me(request, response) {
@@ -19,6 +19,35 @@ class UserController {
       }
 
       return response.status(200).send(user);
+    } catch (error) {
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async findAll(request, response) {
+    try {
+      const { offset, limit, name } = request.query;
+
+      const query = User.query().withGraphFetched('[city, state]');
+
+      if (name) {
+        query
+          .where('first_name', 'like', `%${name}%`)
+          .orWhere('last_name', 'like', `%${name}%`);
+      }
+
+      if (offset && limit) {
+        const users = await query.page(
+          parseInt(offset, 10),
+          parseInt(limit, 10)
+        );
+
+        return response.status(200).send(users);
+      }
+
+      const users = await query;
+
+      return response.status(200).send(users);
     } catch (error) {
       return response.status(500).send({ message: 'Internal server error' });
     }
@@ -208,6 +237,105 @@ class UserController {
 
   async hashPassword(password) {
     return bcrypt.hash(password, 10);
+  }
+
+  async sendFriendRequest(request, response) {
+    try {
+      const { receiver_id } = request.body;
+      const { userId } = request;
+
+      const user = await User.query().findById(userId);
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const userToSendFriendRequest = await User.query().findById(receiver_id);
+
+      if (!userToSendFriendRequest) {
+        return response
+          .status(404)
+          .send({ message: 'User to send friend request not found' });
+      }
+
+      // TODO: VERIFY IF THEY'RE ALREADY FRIEND
+      // TODO: VERIFY IF EXISTS REQUEST
+
+      await User.relatedQuery('sent_friend_requests')
+        .for(userId)
+        .relate(receiver_id);
+
+      return response.status(200).send({ message: 'Friend request sent' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async getSentFriendRequests(request, response) {
+    try {
+      const { offset, limit } = request.query;
+      const { userId } = request;
+
+      const user = await User.query().findById(userId);
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const query = FriendRequest.query()
+        .where('sender_id', userId)
+        .withGraphFetched('[sender, receiver]');
+
+      if (offset && limit) {
+        const sentFriendRequests = await query.page(
+          parseInt(offset, 10),
+          parseInt(limit, 10)
+        );
+
+        return response.status(200).send(sentFriendRequests);
+      }
+
+      const sentFriendRequests = await query;
+
+      return response.status(200).send(sentFriendRequests);
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async getReceivedFriendRequests(request, response) {
+    try {
+      const { offset, limit } = request.query;
+      const { userId } = request;
+
+      const user = await User.query().findById(userId);
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const query = FriendRequest.query()
+        .where('receiver_id', userId)
+        .withGraphFetched('[sender, receiver]');
+
+      if (offset && limit) {
+        const receivedFriendRequests = await query.page(
+          parseInt(offset, 10),
+          parseInt(limit, 10)
+        );
+
+        return response.status(200).send(receivedFriendRequests);
+      }
+
+      const sentFriendRequests = await query;
+
+      return response.status(200).send(sentFriendRequests);
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
   }
 }
 
