@@ -12,6 +12,9 @@ const updateEmailSchema = require('../../validationSchemas/updateEmail');
 const updatePasswordSchema = require('../../validationSchemas/updatePassword');
 const joinEventSchema = require('../../validationSchemas/joinEvent');
 const disjoinEventSchema = require('../../validationSchemas/disjoinEvent');
+const acceptFriendRequestSchema = require('../../validationSchemas/acceptFriendRequest');
+const declineFriendRequestSchema = require('../../validationSchemas/declineFriendRequest');
+const sendFriendRequestSchema = require('../../validationSchemas/sendFriendRequest');
 
 const routes = express.Router();
 
@@ -27,6 +30,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 routes.get('/me', (request, response) => UserController.me(request, response));
+routes.get('/me/friend', (request, response) =>
+  UserController.getMyFriends(request, response)
+);
 routes.put('/me', upload.single('profile_image'), (request, response) =>
   UserController.update(request, response)
 );
@@ -45,14 +51,26 @@ routes.get('/user', (request, response) =>
   UserController.findAll(request, response)
 );
 
-routes.post('/friend-request', (request, response) =>
-  UserController.sendFriendRequest(request, response)
+routes.post(
+  '/friend-request',
+  validator(sendFriendRequestSchema),
+  (request, response) => UserController.sendFriendRequest(request, response)
 );
 routes.get('/friend-request/sent', (request, response) =>
   UserController.getSentFriendRequests(request, response)
 );
 routes.get('/friend-request/received', (request, response) =>
   UserController.getReceivedFriendRequests(request, response)
+);
+routes.post(
+  '/friend-request/accept',
+  validator(acceptFriendRequestSchema),
+  (request, response) => UserController.acceptFriendRequest(request, response)
+);
+routes.post(
+  '/friend-request/decline',
+  validator(declineFriendRequestSchema),
+  (request, response) => UserController.declineFriendRequest(request, response)
 );
 routes.post('/event', validator(createEventSchema), (request, response) =>
   EventController.create(request, response)

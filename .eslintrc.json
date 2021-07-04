@@ -24,6 +24,7 @@
     "object-curly-newline": "off",
     "consistent-return": "off",
     "global-require": "off",
-    "operator-linebreak": "off"
+    "operator-linebreak": "off",
+    "no-shadow": "off"
   }
 }

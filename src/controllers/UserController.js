@@ -2,7 +2,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
-const { User, FriendRequest } = require('../models');
+const { transaction } = require('objection');
+const { User, FriendRequest, Friend } = require('../models');
 
 class UserController {
   async me(request, response) {
@@ -24,11 +25,51 @@ class UserController {
     }
   }
 
+  async getMyFriends(request, response) {
+    try {
+      const { offset, limit } = request.query;
+      const { userId } = request;
+
+      const user = await User.query().findById(userId).omit('password');
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found.' });
+      }
+
+      const query = Friend.query()
+        .where('user_id', userId)
+        .withGraphFetched('[friend, user]');
+
+      if (offset && limit) {
+        const friends = await query.page(
+          parseInt(offset, 10),
+          parseInt(limit, 10)
+        );
+
+        return response.status(200).send(friends);
+      }
+
+      const friends = await query;
+
+      return response.status(200).send(friends);
+    } catch (error) {
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
   async findAll(request, response) {
     try {
-      const { offset, limit, name } = request.query;
+      const { offset, limit, name, notFriends } = request.query;
+      const { userId } = request;
 
       const query = User.query().withGraphFetched('[city, state]');
+
+      if (notFriends === '1') {
+        query.where('id', '!=', userId);
+        query.whereNotExists(
+          User.relatedQuery('friends').alias('f').where('friend_id', userId)
+        );
+      }
 
       if (name) {
         query
@@ -49,6 +90,7 @@ class UserController {
 
       return response.status(200).send(users);
     } catch (error) {
+      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
@@ -257,15 +299,89 @@ class UserController {
           .status(404)
           .send({ message: 'User to send friend request not found' });
       }
+      const isFriends = await Friend.query().findOne({
+        user_id: userId,
+        friend_id: receiver_id,
+      });
 
-      // TODO: VERIFY IF THEY'RE ALREADY FRIEND
-      // TODO: VERIFY IF EXISTS REQUEST
+      if (isFriends) {
+        return response.status(400).send({ message: "You're already friends" });
+      }
+
+      const existFriendRequest = await Friend.query().findOne({
+        user_id: userId,
+        friend_id: receiver_id,
+      });
+
+      if (existFriendRequest) {
+        return response
+          .status(400)
+          .send({ message: 'Friend request already exists for this person' });
+      }
 
       await User.relatedQuery('sent_friend_requests')
         .for(userId)
         .relate(receiver_id);
 
       return response.status(200).send({ message: 'Friend request sent' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async acceptFriendRequest(request, response) {
+    try {
+      const { friend_request_id } = request.body;
+      const { userId } = request;
+
+      const friendRequest = await FriendRequest.query()
+        .findById(friend_request_id)
+        .where('receiver_id', userId);
+
+      if (!friendRequest) {
+        return response
+          .status(404)
+          .send({ message: 'Friend request not found.' });
+      }
+
+      await transaction(FriendRequest, User, async (FriendRequest, User) => {
+        await User.relatedQuery('friends')
+          .for(userId)
+          .relate(friendRequest.sender_id);
+
+        await User.relatedQuery('friends')
+          .for(friendRequest.sender_id)
+          .relate(userId);
+
+        await FriendRequest.query().deleteById(friend_request_id);
+      });
+
+      return response.status(200).send({ message: 'Friend request accepted' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async declineFriendRequest(request, response) {
+    try {
+      const { friend_request_id } = request.body;
+      const { userId } = request;
+
+      const friendRequest = await FriendRequest.query()
+        .findById(friend_request_id)
+        .where('receiver_id', userId);
+
+      if (!friendRequest) {
+        return response
+          .status(404)
+          .send({ message: 'Friend request not found.' });
+      }
+
+      await FriendRequest.query().deleteById(friend_request_id);
+
+      return response.status(200).send({ message: 'Friend request declined' });
     } catch (error) {
       console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
