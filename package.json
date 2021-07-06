@@ -10,7 +10,7 @@
   "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=production node src/server",
-    "start:dev": "NODE_ENV=test nodemon src/server",
+    "start:dev": "cross-env TZ=America/Sao_Paulo NODE_ENV=test nodemon src/server",
     "migration:make": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:make",
     "migration:latest": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:latest",
     "migration:rollback": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:rollback",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
+    "cross-env": "^7.0.3",
     "eslint": "^7.23.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.1.0",

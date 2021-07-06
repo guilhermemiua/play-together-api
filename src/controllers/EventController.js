@@ -1,3 +1,4 @@
+const { formatISO, parseISO } = require('date-fns');
 const { Event, User, EventUser } = require('../models');
 
 class EventController {
@@ -20,13 +21,74 @@ class EventController {
     }
   }
 
+  async getMyEvents(request, response) {
+    try {
+      const { offset, limit, type = 'past' } = request.query;
+      const { userId } = request;
+
+      const query = Event.query()
+        .withGraphFetched('[user, city, state, users]')
+        .where(function () {
+          this.where('user_id', userId).orWhereExists(
+            Event.relatedQuery('users').where('user_id', userId)
+          );
+        });
+
+      if (type === 'upcoming') {
+        query
+          .where('date', '>=', new Date())
+          .andWhere('start_time', '>=', new Date());
+      } else if (type === 'past') {
+        query
+          .where('date', '<=', new Date())
+          .andWhere('end_time', '<=', new Date());
+      }
+
+      if (offset && limit) {
+        const myEvents = await query.page(
+          parseInt(offset, 10),
+          parseInt(limit, 10)
+        );
+
+        return response.status(200).send(myEvents);
+      }
+
+      const myEvents = await query;
+
+      return response.status(200).send(myEvents);
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
   async findAll(request, response) {
     try {
-      const { offset, limit } = request.query;
+      const { offset, limit, showFull = '0', type } = request.query;
 
       const query = Event.query().withGraphFetched(
         '[user, city, state, users]'
       );
+
+      // IF SHOW FULL, SHOW ALL THE EVENTS INDEPENDENT OF PLAYERS QUANTITY
+      if (showFull === '0') {
+        query.where(
+          'players_quantity',
+          '>',
+          Event.relatedQuery('users').count()
+        );
+      }
+
+      if (type === 'upcoming') {
+        query
+          .where('date', '>=', new Date())
+          .andWhere('start_time', '>=', new Date());
+      } else if (type === 'past') {
+        query
+          .where('date', '<=', new Date())
+          .andWhere('end_time', '<=', new Date());
+      }
+
       if (offset && limit) {
         const events = await query.page(
           parseInt(offset, 10),
@@ -40,6 +102,7 @@ class EventController {
 
       return response.status(200).send(events);
     } catch (error) {
+      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
@@ -65,8 +128,8 @@ class EventController {
           state_id,
           city_id,
           date,
-          start_time,
-          end_time,
+          start_time: this.joinDateAndTime(date, start_time),
+          end_time: this.joinDateAndTime(date, end_time),
           players_quantity,
           user_id: userId,
         })
@@ -107,7 +170,7 @@ class EventController {
 
       const eventParticipants = await EventUser.query().where('event_id', id);
 
-      if (players_quantity < eventParticipants.length + 1) {
+      if (players_quantity < eventParticipants.length) {
         return response.status(400).send({
           message: `Event has already ${
             eventParticipants.length + 1
@@ -121,8 +184,8 @@ class EventController {
           state_id,
           city_id,
           date,
-          start_time,
-          end_time,
+          start_time: this.joinDateAndTime(date, start_time),
+          end_time: this.joinDateAndTime(date, end_time),
           players_quantity,
         })
         .where('id', id);
@@ -134,6 +197,15 @@ class EventController {
       console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
+  }
+
+  joinDateAndTime(date, time) {
+    const newDate = formatISO(parseISO(date), { representation: 'date' });
+    const newTime = formatISO(parseISO(time), {
+      representation: 'time',
+    });
+
+    return `${newDate}T${newTime}`;
   }
 
   async delete(request, response) {
@@ -245,7 +317,7 @@ class EventController {
       );
 
       // -1 because owner user counts as one participant
-      if (eventParticipants.length === event.players_quantity - 1) {
+      if (eventParticipants.length === event.players_quantity) {
         return response.status(400).send({ message: 'Event is full' });
       }
 

@@ -87,19 +87,6 @@ class User extends Model {
           to: 'users.id',
         },
       },
-      test: {
-        relation: Model.ManyToManyRelation,
-        modelClass: User,
-        join: {
-          from: 'users.id',
-          through: {
-            from: 'friends.friend_id',
-            to: 'friends.user_id',
-            modelClass: Friend,
-          },
-          to: 'users.id',
-        },
-      },
     };
   }
 }

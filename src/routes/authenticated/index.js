@@ -33,6 +33,9 @@ routes.get('/me', (request, response) => UserController.me(request, response));
 routes.get('/me/friend', (request, response) =>
   UserController.getMyFriends(request, response)
 );
+routes.get('/me/event', (request, response) =>
+  EventController.getMyEvents(request, response)
+);
 routes.put('/me', upload.single('profile_image'), (request, response) =>
   UserController.update(request, response)
 );
