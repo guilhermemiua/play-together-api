@@ -8,7 +8,9 @@ class EventController {
 
       const event = await Event.query()
         .findById(id)
-        .withGraphFetched('[user, city, state, users]');
+        .withGraphFetched(
+          '[user.[city, state], city, state, users.[city, state]]'
+        );
 
       if (!event) {
         return response.status(404).send({ message: 'Event not found' });
@@ -27,7 +29,9 @@ class EventController {
       const { userId } = request;
 
       const query = Event.query()
-        .withGraphFetched('[user, city, state, users]')
+        .withGraphFetched(
+          '[user.[city, state], city, state, users.[city, state]]'
+        )
         .where(function () {
           this.where('user_id', userId).orWhereExists(
             Event.relatedQuery('users').where('user_id', userId)
@@ -64,11 +68,26 @@ class EventController {
 
   async findAll(request, response) {
     try {
-      const { offset, limit, showFull = '0', type } = request.query;
+      const {
+        offset,
+        limit,
+        showFull = '0',
+        showMyEvents = '0',
+        type,
+      } = request.query;
+      const { userId } = request;
 
       const query = Event.query().withGraphFetched(
-        '[user, city, state, users]'
+        '[user.[city, state], city, state, users.[city, state]]'
       );
+
+      if (showMyEvents === '0') {
+        query.where(function () {
+          this.where('user_id', '!=', userId).whereNotExists(
+            Event.relatedQuery('users').where('user_id', userId)
+          );
+        });
+      }
 
       // IF SHOW FULL, SHOW ALL THE EVENTS INDEPENDENT OF PLAYERS QUANTITY
       if (showFull === '0') {
@@ -99,7 +118,6 @@ class EventController {
       }
 
       const events = await query;
-
       return response.status(200).send(events);
     } catch (error) {
       console.log(error);

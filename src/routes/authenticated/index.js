@@ -5,13 +5,18 @@ const path = require('path');
 const validator = require('../../middlewares/validator');
 
 const EventController = require('../../controllers/EventController');
+const GroupController = require('../../controllers/GroupController');
 const UserController = require('../../controllers/UserController');
 const createEventSchema = require('../../validationSchemas/createEvent');
 const updateEventSchema = require('../../validationSchemas/updateEvent');
-const updateEmailSchema = require('../../validationSchemas/updateEmail');
-const updatePasswordSchema = require('../../validationSchemas/updatePassword');
 const joinEventSchema = require('../../validationSchemas/joinEvent');
 const disjoinEventSchema = require('../../validationSchemas/disjoinEvent');
+const createGroupSchema = require('../../validationSchemas/createGroup');
+const updateGroupSchema = require('../../validationSchemas/updateGroup');
+const joinGroupSchema = require('../../validationSchemas/joinGroup');
+const disjoinGroupSchema = require('../../validationSchemas/disjoinGroup');
+const updateEmailSchema = require('../../validationSchemas/updateEmail');
+const updatePasswordSchema = require('../../validationSchemas/updatePassword');
 const acceptFriendRequestSchema = require('../../validationSchemas/acceptFriendRequest');
 const declineFriendRequestSchema = require('../../validationSchemas/declineFriendRequest');
 const sendFriendRequestSchema = require('../../validationSchemas/sendFriendRequest');
@@ -35,6 +40,9 @@ routes.get('/me/friend', (request, response) =>
 );
 routes.get('/me/event', (request, response) =>
   EventController.getMyEvents(request, response)
+);
+routes.get('/me/group', (request, response) =>
+  GroupController.getMyGroups(request, response)
 );
 routes.put('/me', upload.single('profile_image'), (request, response) =>
   UserController.update(request, response)
@@ -100,6 +108,39 @@ routes.post(
 );
 routes.delete('/event/:event_id/user/:user_id', (request, response) =>
   EventController.removeUser(request, response)
+);
+
+routes.post(
+  '/group',
+  upload.single('group_image'),
+  validator(createGroupSchema),
+  (request, response) => GroupController.create(request, response)
+);
+routes.put(
+  '/group/:id',
+  upload.single('group_image'),
+  validator(updateGroupSchema),
+  (request, response) => GroupController.update(request, response)
+);
+routes.get('/group/:id', (request, response) =>
+  GroupController.findById(request, response)
+);
+routes.delete('/group/:id', (request, response) =>
+  GroupController.delete(request, response)
+);
+routes.get('/group', (request, response) =>
+  GroupController.findAll(request, response)
+);
+routes.post('/group/join', validator(joinGroupSchema), (request, response) =>
+  GroupController.joinUser(request, response)
+);
+routes.post(
+  '/group/disjoin',
+  validator(disjoinGroupSchema),
+  (request, response) => GroupController.disjoinUser(request, response)
+);
+routes.delete('/group/:group_id/user/:user_id', (request, response) =>
+  GroupController.removeUser(request, response)
 );
 
 module.exports = routes;

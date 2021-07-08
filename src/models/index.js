@@ -3,6 +3,8 @@ const City = require('./City');
 const State = require('./State');
 const Event = require('./Event');
 const EventUser = require('./EventUser');
+const Group = require('./Group');
+const GroupUser = require('./GroupUser');
 const FriendRequest = require('./FriendRequest');
 const Friend = require('./Friend');
 
@@ -14,4 +16,6 @@ module.exports = {
   EventUser,
   FriendRequest,
   Friend,
+  Group,
+  GroupUser,
 };

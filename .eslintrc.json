@@ -25,6 +25,7 @@
     "consistent-return": "off",
     "global-require": "off",
     "operator-linebreak": "off",
-    "no-shadow": "off"
+    "no-shadow": "off",
+    "func-names": "off"
   }
 }

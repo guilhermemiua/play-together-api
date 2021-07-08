@@ -1,6 +1,5 @@
 const validator = (schema) => async (req, res, next) => {
   const { body } = req;
-
   try {
     // throws an error if not valid
     await schema.validate(body);

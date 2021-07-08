@@ -16,6 +16,8 @@ class User extends Model {
       Event,
       FriendRequest,
       Friend,
+      Group,
+      GroupUser,
     } = require('../index');
 
     return {
@@ -33,6 +35,19 @@ class User extends Model {
         join: {
           from: 'users.state_id',
           to: 'states.id',
+        },
+      },
+      groups: {
+        relation: Model.ManyToManyRelation,
+        modelClass: Group,
+        join: {
+          from: 'users.id',
+          through: {
+            from: 'group_users.user_id',
+            to: 'group_users.group_id',
+            modelClass: GroupUser,
+          },
+          to: 'groups.id',
         },
       },
       events: {
