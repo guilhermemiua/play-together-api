@@ -20,5 +20,8 @@ routes.get('/state', (request, response) =>
 routes.get('/city', (request, response) =>
   CityController.findAll(request, response)
 );
+routes.get('/city/:id', (request, response) =>
+  CityController.findById(request, response)
+);
 
 module.exports = routes;
