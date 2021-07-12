@@ -19,6 +19,7 @@ const updateEmailSchema = require('../../validationSchemas/updateEmail');
 const updatePasswordSchema = require('../../validationSchemas/updatePassword');
 const acceptFriendRequestSchema = require('../../validationSchemas/acceptFriendRequest');
 const declineFriendRequestSchema = require('../../validationSchemas/declineFriendRequest');
+const cancelFriendRequestSchema = require('../../validationSchemas/cancelFriendRequest');
 const sendFriendRequestSchema = require('../../validationSchemas/sendFriendRequest');
 
 const routes = express.Router();
@@ -37,6 +38,12 @@ const upload = multer({ storage });
 routes.get('/me', (request, response) => UserController.me(request, response));
 routes.get('/me/friend', (request, response) =>
   UserController.getMyFriends(request, response)
+);
+routes.get('/me/friend/:id/status', (request, response) =>
+  UserController.getFriendStatus(request, response)
+);
+routes.delete('/me/friend/:id', (request, response) =>
+  UserController.removeMyFriend(request, response)
 );
 routes.get('/me/event', (request, response) =>
   EventController.getMyEvents(request, response)
@@ -82,6 +89,11 @@ routes.post(
   '/friend-request/decline',
   validator(declineFriendRequestSchema),
   (request, response) => UserController.declineFriendRequest(request, response)
+);
+routes.post(
+  '/friend-request/cancel',
+  validator(cancelFriendRequestSchema),
+  (request, response) => UserController.cancelFriendRequest(request, response)
 );
 routes.post('/event', validator(createEventSchema), (request, response) =>
   EventController.create(request, response)

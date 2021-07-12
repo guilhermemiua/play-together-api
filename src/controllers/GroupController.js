@@ -129,8 +129,6 @@ class GroupController {
           .status(400)
           .send({ message: 'User is not owner of the group' });
       }
-
-      console.log(name);
       await Group.query()
         .update({
           name,

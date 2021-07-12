@@ -25,6 +25,97 @@ class UserController {
     }
   }
 
+  async removeMyFriend(request, response) {
+    try {
+      const { userId } = request;
+      const { id } = request.params;
+
+      const userFriend = await User.query().findById(id).omit('password');
+
+      if (!userFriend) {
+        return response.status(404).send({ message: 'User friend not found.' });
+      }
+
+      await User.relatedQuery('friends')
+        .for(userId)
+        .unrelate()
+        .where('friend_id', id);
+
+      await User.relatedQuery('friends')
+        .for(id)
+        .unrelate()
+        .where('friend_id', userId);
+
+      return response
+        .status(200)
+        .send({ message: 'Friend removed successfully!' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async getFriendStatus(request, response) {
+    try {
+      const { userId } = request;
+      const { id } = request.params;
+
+      let status = {
+        friends: false,
+        sent_friend_request: false,
+        received_friend_request: false,
+      };
+
+      const userFriend = await User.query().findById(id).omit('password');
+
+      if (!userFriend) {
+        return response.status(404).send({ message: 'User friend not found.' });
+      }
+
+      const sentFriendRequest = await FriendRequest.query()
+        .where('sender_id', userId)
+        .andWhere('receiver_id', id)
+        .first();
+
+      if (sentFriendRequest) {
+        status = {
+          ...status,
+          sent_friend_request: true,
+          friend_request: sentFriendRequest,
+        };
+      }
+
+      const receivedFriendRequest = await FriendRequest.query()
+        .where('sender_id', id)
+        .andWhere('receiver_id', userId)
+        .first();
+
+      if (receivedFriendRequest) {
+        status = {
+          ...status,
+          received_friend_request: true,
+          friend_request: receivedFriendRequest,
+        };
+      }
+
+      const friend = await Friend.query()
+        .where('user_id', userId)
+        .andWhere('friend_id', id)
+        .first();
+
+      if (friend) {
+        status = {
+          ...status,
+          friends: true,
+        };
+      }
+
+      return response.status(200).send(status);
+    } catch (error) {
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
   async getMyFriends(request, response) {
     try {
       const { offset, limit } = request.query;
@@ -38,7 +129,7 @@ class UserController {
 
       const query = Friend.query()
         .where('user_id', userId)
-        .withGraphFetched('[friend, user]');
+        .withGraphFetched('[friend.[city, state], user.[city, state]]');
 
       if (offset && limit) {
         const friends = await query.page(
@@ -382,6 +473,30 @@ class UserController {
       await FriendRequest.query().deleteById(friend_request_id);
 
       return response.status(200).send({ message: 'Friend request declined' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async cancelFriendRequest(request, response) {
+    try {
+      const { friend_request_id } = request.body;
+      const { userId } = request;
+
+      const friendRequest = await FriendRequest.query()
+        .findById(friend_request_id)
+        .where('sender_id', userId);
+
+      if (!friendRequest) {
+        return response
+          .status(404)
+          .send({ message: 'Friend request not found.' });
+      }
+
+      await FriendRequest.query().deleteById(friend_request_id);
+
+      return response.status(200).send({ message: 'Friend request cancelled' });
     } catch (error) {
       console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
