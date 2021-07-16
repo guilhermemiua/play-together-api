@@ -14,6 +14,7 @@ const disjoinEventSchema = require('../../validationSchemas/disjoinEvent');
 const createGroupSchema = require('../../validationSchemas/createGroup');
 const updateGroupSchema = require('../../validationSchemas/updateGroup');
 const joinGroupSchema = require('../../validationSchemas/joinGroup');
+const addUserToGroupSchema = require('../../validationSchemas/addUserToGroup');
 const disjoinGroupSchema = require('../../validationSchemas/disjoinGroup');
 const updateEmailSchema = require('../../validationSchemas/updateEmail');
 const updatePasswordSchema = require('../../validationSchemas/updatePassword');
@@ -145,6 +146,11 @@ routes.get('/group', (request, response) =>
 );
 routes.post('/group/join', validator(joinGroupSchema), (request, response) =>
   GroupController.joinUser(request, response)
+);
+routes.post(
+  '/group/add-user',
+  validator(addUserToGroupSchema),
+  (request, response) => GroupController.addUser(request, response)
 );
 routes.post(
   '/group/disjoin',

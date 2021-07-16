@@ -235,6 +235,49 @@ class GroupController {
     }
   }
 
+  async addUser(request, response) {
+    try {
+      const { group_id, user_id } = request.body;
+
+      const group = await Group.query()
+        .findById(group_id)
+        .withGraphFetched('[user]');
+
+      if (!group) {
+        return response.status(404).send({ message: 'Group not found' });
+      }
+
+      if (group.user.id === user_id) {
+        return response
+          .status(400)
+          .send({ message: 'User is owner of the group' });
+      }
+
+      const user = await User.query().findById(user_id);
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const existUserInGroup = await Group.query()
+        .findById(group_id)
+        .whereExists(Group.relatedQuery('users').where('user_id', user_id));
+
+      if (existUserInGroup) {
+        return response
+          .status(400)
+          .send({ message: 'User is already  in group' });
+      }
+
+      await Group.relatedQuery('users').for(group_id).relate(user_id);
+
+      return response.status(201).send({ message: 'User joined group' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
   async joinUser(request, response) {
     try {
       const { group_id } = request.body;

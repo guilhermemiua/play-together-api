@@ -74,6 +74,7 @@ class EventController {
         showFull = '0',
         showMyEvents = '0',
         type,
+        cityId,
       } = request.query;
       const { userId } = request;
 
@@ -106,6 +107,10 @@ class EventController {
         query
           .where('date', '<=', new Date())
           .andWhere('end_time', '<=', new Date());
+      }
+
+      if (cityId) {
+        query.where('city_id', parseInt(cityId, 10));
       }
 
       if (offset && limit) {

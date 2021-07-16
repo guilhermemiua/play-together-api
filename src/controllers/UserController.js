@@ -263,6 +263,7 @@ class UserController {
 
       return response.status(200).send({ token, user });
     } catch (error) {
+      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }
