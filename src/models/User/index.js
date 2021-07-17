@@ -18,6 +18,7 @@ class User extends Model {
       Friend,
       Group,
       GroupUser,
+      ReviewUser,
     } = require('../index');
 
     return {
@@ -98,6 +99,32 @@ class User extends Model {
             from: 'friends.user_id',
             to: 'friends.friend_id',
             modelClass: Friend,
+          },
+          to: 'users.id',
+        },
+      },
+      reviews: {
+        relation: Model.ManyToManyRelation,
+        modelClass: User,
+        join: {
+          from: 'users.id',
+          through: {
+            from: 'review_users.user_id',
+            to: 'review_users.reviewed_user_id',
+            modelClass: ReviewUser,
+          },
+          to: 'users.id',
+        },
+      },
+      reviewed_users: {
+        relation: Model.ManyToManyRelation,
+        modelClass: User,
+        join: {
+          from: 'users.id',
+          through: {
+            from: 'review_users.reviewed_user_id',
+            to: 'review_users.user_id',
+            modelClass: ReviewUser,
           },
           to: 'users.id',
         },

@@ -46,6 +46,12 @@ routes.get('/me/friend/:id/status', (request, response) =>
 routes.delete('/me/friend/:id', (request, response) =>
   UserController.removeMyFriend(request, response)
 );
+routes.get('/me/event/:eventId/reviews', (request, response) =>
+  UserController.getMyReviewsByEvent(request, response)
+);
+routes.get('/me/rating', (request, response) =>
+  UserController.getMyRating(request, response)
+);
 routes.get('/me/event', (request, response) =>
   EventController.getMyEvents(request, response)
 );
@@ -118,6 +124,9 @@ routes.post(
   '/event/disjoin',
   validator(disjoinEventSchema),
   (request, response) => EventController.disjoinUser(request, response)
+);
+routes.post('/event/review-users', (request, response) =>
+  EventController.reviewUsers(request, response)
 );
 routes.delete('/event/:event_id/user/:user_id', (request, response) =>
   EventController.removeUser(request, response)

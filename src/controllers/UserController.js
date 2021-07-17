@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { transaction } = require('objection');
-const { User, FriendRequest, Friend } = require('../models');
+const { User, FriendRequest, Friend, ReviewUser } = require('../models');
 
 class UserController {
   async me(request, response) {
@@ -112,6 +112,45 @@ class UserController {
 
       return response.status(200).send(status);
     } catch (error) {
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async getMyRating(request, response) {
+    try {
+      const { userId } = request;
+
+      const review = await ReviewUser.query()
+        .avg('rating')
+        .where('user_id', userId)
+        .first();
+
+      return response.status(200).send({
+        rating: parseInt(review.avg, 10).toFixed(0),
+      });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async getMyReviewsByEvent(request, response) {
+    try {
+      const { eventId } = request.params;
+      const { userId } = request;
+
+      const query = ReviewUser.query()
+        .withGraphFetched(
+          '[user.[city, state], user_reviewed.[city, state], event]'
+        )
+        .where('event_id', parseInt(eventId, 10))
+        .andWhere('user_id', userId);
+
+      const reviewsByEvent = await query;
+
+      return response.status(200).send(reviewsByEvent);
+    } catch (error) {
+      console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
     }
   }

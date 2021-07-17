@@ -1,5 +1,5 @@
 const { formatISO, parseISO } = require('date-fns');
-const { Event, User, EventUser } = require('../models');
+const { Event, User, EventUser, ReviewUser } = require('../models');
 
 class EventController {
   async findById(request, response) {
@@ -309,6 +309,47 @@ class EventController {
       return response
         .status(200)
         .send({ message: 'Event deleted successfully!' });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async reviewUsers(request, response) {
+    try {
+      const { event_id, review_users } = request.body;
+      const { userId } = request;
+
+      const event = await Event.query()
+        .findById(event_id)
+        .withGraphFetched('[user]');
+
+      if (!event) {
+        return response.status(404).send({ message: 'Event not found' });
+      }
+
+      const reviews = await ReviewUser.query()
+        .where('event_id', event_id)
+        .andWhere('user_id', userId);
+
+      if (reviews.length) {
+        return response
+          .status(400)
+          .send({ message: 'User already reviewed users' });
+      }
+
+      await Promise.all(
+        review_users.map(async (userReview) => {
+          await ReviewUser.query().insert({
+            user_id: userId,
+            user_reviewed_id: userReview.user_id,
+            event_id,
+            rating: userReview.rating,
+          });
+        })
+      );
+
+      return response.status(201).send({ message: 'Users reviewed' });
     } catch (error) {
       console.log(error);
       return response.status(500).send({ message: 'Internal server error' });

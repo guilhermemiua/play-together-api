@@ -7,6 +7,7 @@ const Group = require('./Group');
 const GroupUser = require('./GroupUser');
 const FriendRequest = require('./FriendRequest');
 const Friend = require('./Friend');
+const ReviewUser = require('./ReviewUser');
 
 module.exports = {
   User,
@@ -18,4 +19,5 @@ module.exports = {
   Friend,
   Group,
   GroupUser,
+  ReviewUser,
 };
