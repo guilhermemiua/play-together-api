@@ -3,7 +3,9 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { transaction } = require('objection');
+const shortid = require('shortid');
 const { User, FriendRequest, Friend, ReviewUser } = require('../models');
+const MailerService = require('../services/MailerService');
 
 class UserController {
   async me(request, response) {
@@ -603,6 +605,92 @@ class UserController {
       const sentFriendRequests = await query;
 
       return response.status(200).send(sentFriendRequests);
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async forgotPassword(request, response) {
+    try {
+      const { email } = request.body;
+
+      const existsUser = await User.query().findOne({
+        email,
+      });
+
+      if (!existsUser) {
+        return response.status(404).send({ message: 'User not found.' });
+      }
+
+      const token = await shortid.generate();
+
+      await User.query()
+        .update({
+          token,
+        })
+        .where('email', email);
+
+      await MailerService.sendMail(email, 'Esqueci minha senha', token);
+
+      return response.status(200).send({
+        message: 'Email sent with success!',
+      });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async forgotPasswordToken(request, response) {
+    try {
+      const { email, token } = request.body;
+
+      const user = await User.query().findOne({
+        email,
+      });
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found.' });
+      }
+
+      if (user.token !== token) {
+        return response.status(400).send({ message: 'Token invalid.' });
+      }
+
+      return response.status(200).send({
+        message: 'Valid token!',
+      });
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async forgotPasswordNewPassword(request, response) {
+    try {
+      const { email, password } = request.body;
+
+      const user = await User.query().findOne({
+        email,
+      });
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found.' });
+      }
+
+      // Hashing password
+      const passwordHashed = await this.hashPassword(password);
+
+      await User.query()
+        .update({
+          password: passwordHashed,
+        })
+        .where('email', email);
+
+      return response.status(200).send({
+        message: 'Password updated successfully!',
+      });
     } catch (error) {
       console.log(error);
       return response.status(500).send({ message: 'Internal server error' });

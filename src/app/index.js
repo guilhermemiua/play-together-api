@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-
 const authenticatedRoutes = require('../routes/authenticated');
 const unauthenticatedRoutes = require('../routes/unauthenticated');
 const authMiddleware = require('../middlewares/auth');
