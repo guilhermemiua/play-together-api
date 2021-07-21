@@ -15,8 +15,10 @@
     "migration:latest": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:latest",
     "migration:rollback": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:rollback",
     "migration:run": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:up",
+    "prod:migration:run": "NODE_ENV=production knex --knexfile src/config/knexfile.js migrate:up",
     "seed:make": "NODE_ENV=test knex --knexfile src/config/knexfile.js seed:make",
-    "seed:run": "NODE_ENV=test knex --knexfile src/config/knexfile.js seed:run"
+    "seed:run": "NODE_ENV=test knex --knexfile src/config/knexfile.js seed:run",
+    "prod:seed:run": "NODE_ENV=production knex --knexfile src/config/knexfile.js seed:run"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
