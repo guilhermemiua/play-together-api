@@ -14,6 +14,6 @@ exports.down = function (knex) {
   return knex.schema.alterTable('users', (table) => {
     table.dropForeign('city_id');
     table.dropColumn('city_id');
-    table.string('city').notNullable();
+    table.string('city');
   });
 };

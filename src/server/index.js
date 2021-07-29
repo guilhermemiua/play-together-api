@@ -1,11 +1,7 @@
-const path = require('path');
 const app = require('../app');
-
+const { getEnvPath } = require('../helpers');
 require('dotenv').config({
-  path:
-    process.env.NODE_ENV === 'test'
-      ? path.join(__dirname, '../../.env.test')
-      : path.join(__dirname, '../../.env'),
+  path: getEnvPath(),
 });
 
 app.listen(process.env.PORT || 3333, () => {

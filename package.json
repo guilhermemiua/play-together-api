@@ -10,15 +10,18 @@
   "license": "MIT",
   "scripts": {
     "start": "NODE_ENV=production node src/server",
-    "start:dev": "NODE_ENV=test nodemon src/server",
-    "migration:make": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:make",
-    "migration:latest": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:latest",
-    "migration:rollback": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:rollback",
-    "migration:run": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:up",
+    "start:dev": "NODE_ENV=development nodemon src/server",
+    "migration:make": "NODE_ENV=development knex --knexfile src/config/knexfile.js migrate:make",
+    "migration:latest": "NODE_ENV=development knex --knexfile src/config/knexfile.js migrate:latest",
+    "migration:rollback": "NODE_ENV=development knex --knexfile src/config/knexfile.js migrate:rollback",
+    "migration:run": "NODE_ENV=development knex --knexfile src/config/knexfile.js migrate:up",
     "prod:migration:run": "NODE_ENV=production knex --knexfile src/config/knexfile.js migrate:up",
-    "seed:make": "NODE_ENV=test knex --knexfile src/config/knexfile.js seed:make",
-    "seed:run": "NODE_ENV=test knex --knexfile src/config/knexfile.js seed:run",
-    "prod:seed:run": "NODE_ENV=production knex --knexfile src/config/knexfile.js seed:run"
+    "seed:make": "NODE_ENV=development knex --knexfile src/config/knexfile.js seed:make",
+    "seed:run": "NODE_ENV=development knex --knexfile src/config/knexfile.js seed:run",
+    "prod:seed:run": "NODE_ENV=production knex --knexfile src/config/knexfile.js seed:run",
+    "pretest": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:latest && NODE_ENV=test knex --knexfile src/config/knexfile.js seed:run",
+    "test": "NODE_ENV=test jest",
+    "posttest": "NODE_ENV=test knex --knexfile src/config/knexfile.js migrate:rollback"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
@@ -43,7 +46,9 @@
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-prettier": "^3.3.1",
+    "jest": "^27.0.6",
     "nodemon": "^2.0.7",
-    "prettier": "^2.2.1"
+    "prettier": "^2.2.1",
+    "supertest": "^6.1.4"
   }
 }

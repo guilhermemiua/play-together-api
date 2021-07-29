@@ -1,26 +1,14 @@
 const nodemailer = require('nodemailer');
 
-const path = require('path');
 const nodemailerConfig = require('../config/nodemailer');
-
+const { getEnvPath } = require('../helpers');
 require('dotenv').config({
-  path:
-    process.env.NODE_ENV === 'test'
-      ? path.join(__dirname, '../../.env.test')
-      : path.join(__dirname, '../../.env'),
+  path: getEnvPath(),
 });
 
 class MailerService {
   constructor() {
     this.transport = nodemailer.createTransport(nodemailerConfig);
-
-    this.transport.verify((error, success) => {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log('Server is ready to take our messages');
-      }
-    });
   }
 
   async sendMail(to, title, text) {

@@ -1,22 +1,17 @@
 const path = require('path');
+const { getEnvPath } = require('../helpers');
 
 require('dotenv').config({
-  path:
-    process.env.NODE_ENV === 'test'
-      ? path.join(__dirname, '../../.env.test')
-      : path.join(__dirname, '../../.env'),
+  path: getEnvPath(),
 });
 
-module.exports = {
+let knexConfig = {
   client: process.env.DB_CLIENT || 'pg',
   connection: {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
-    ssl: {
-      rejectUnauthorized: false,
-    },
   },
   pool: {
     min: 2,
@@ -32,3 +27,17 @@ module.exports = {
   },
   timezone: 'UTC',
 };
+
+if (process.env.NODE_ENV === 'production') {
+  knexConfig = {
+    ...knexConfig,
+    connection: {
+      ...knexConfig.connection,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    },
+  };
+}
+
+module.exports = knexConfig;

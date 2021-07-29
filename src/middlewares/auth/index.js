@@ -20,7 +20,7 @@ async function auth(request, response, next) {
 
     return next();
   } catch (error) {
-    return response.status(403).send({ message: 'Forbidden' });
+    return response.status(401).send({ message: 'Unauthenticated' });
   }
 }
 

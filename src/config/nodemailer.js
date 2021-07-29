@@ -1,10 +1,7 @@
-const path = require('path');
+const { getEnvPath } = require('../helpers');
 
 require('dotenv').config({
-  path:
-    process.env.NODE_ENV === 'test'
-      ? path.join(__dirname, '../../.env.test')
-      : path.join(__dirname, '../../.env'),
+  path: getEnvPath(),
 });
 
 module.exports = {

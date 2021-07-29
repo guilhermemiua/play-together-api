@@ -2,7 +2,8 @@
   "env": {
     "commonjs": true,
     "es2021": true,
-    "node": true
+    "node": true,
+    "jest": true
   },
   "extends": [
     "prettier",
@@ -26,6 +27,7 @@
     "global-require": "off",
     "operator-linebreak": "off",
     "no-shadow": "off",
-    "func-names": "off"
+    "func-names": "off",
+    "max-len": "off"
   }
 }
