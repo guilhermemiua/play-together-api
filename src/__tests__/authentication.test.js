@@ -1,28 +1,25 @@
 const request = require('supertest');
+const faker = require('faker');
 const app = require('../app');
 const { hashPassword } = require('../controllers/UserController');
 const { User } = require('../models');
+const createUserFactory = require('./factories/createUserFactory');
 
 describe('Authentication', () => {
   it('should authenticate with valid credentials', async () => {
-    const password = '123456';
-    const passwordHashed = await hashPassword(password);
+    const user = createUserFactory();
 
-    const user = {
-      first_name: 'Guilherme',
-      last_name: 'Eiti',
-      email: 'guilhermeeiti@gmail.com',
+    // Hashing pass because it will insert directly into database
+    const passwordHashed = await hashPassword(user.password);
+
+    await User.query().insert({
+      ...user,
       password: passwordHashed,
-      age: 21,
-      gender: 'male',
-      is_email_verified: true,
-    };
-
-    await User.query().insert(user);
+    });
 
     const response = await request(app).post('/authenticate').send({
       email: user.email,
-      password,
+      password: user.password,
     });
 
     expect(response.status).toBe(200);
@@ -30,58 +27,50 @@ describe('Authentication', () => {
 
   it('should not authenticate with invalid credentials', async () => {
     const response = await request(app).post('/authenticate').send({
-      email: 'not_existing_user@gmail.com',
-      password: '123456',
+      email: faker.internet.email(),
+      password: faker.internet.password(),
     });
 
     expect(response.status).toBe(404);
   });
 
   it('should return jwt token when authenticated', async () => {
-    const password = '123456';
-    const passwordHashed = await hashPassword(password);
+    const user = createUserFactory();
 
-    const user = {
-      first_name: 'Guilherme',
-      last_name: 'Miua',
-      email: 'guilhermemiua@gmail.com',
+    // Hashing pass because it will insert directly into database
+    const passwordHashed = await hashPassword(user.password);
+
+    await User.query().insert({
+      ...user,
       password: passwordHashed,
-      age: 21,
-      gender: 'male',
-      is_email_verified: true,
-    };
+    });
 
     await User.query().insert(user);
 
     const response = await request(app).post('/authenticate').send({
       email: user.email,
-      password,
+      password: user.password,
     });
 
     expect(response.body).toHaveProperty('token');
   });
 
   it('should be able to access private routes when authenticated', async () => {
-    const password = '123456';
-    const passwordHashed = await hashPassword(password);
+    const user = createUserFactory();
 
-    const user = {
-      first_name: 'Guilherme',
-      last_name: 'Akita',
-      email: 'guilherme@gmail.com',
+    // Hashing pass because it will insert directly into database
+    const passwordHashed = await hashPassword(user.password);
+
+    await User.query().insert({
+      ...user,
       password: passwordHashed,
-      age: 21,
-      gender: 'male',
-      is_email_verified: true,
-    };
-
-    await User.query().insert(user);
+    });
 
     const {
       body: { token },
     } = await request(app).post('/authenticate').send({
       email: user.email,
-      password,
+      password: user.password,
     });
 
     const response = await request(app)
