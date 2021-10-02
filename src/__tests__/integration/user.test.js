@@ -1,6 +1,6 @@
 const request = require('supertest');
-const app = require('../app');
-const createUserFactory = require('./factories/createUserFactory');
+const app = require('../../app');
+const createUserFactory = require('../factories/createUserFactory');
 
 describe('User', () => {
   it('should create user', async () => {
@@ -20,5 +20,15 @@ describe('User', () => {
     const response = await request(app).post('/register').send(user);
 
     expect(response.status).toBe(400);
+  });
+
+  it('should not create user with invalid parameters', async () => {
+    const user = {};
+
+    await request(app).post('/register').send(user);
+
+    const response = await request(app).post('/register').send(user);
+
+    expect(response.status).toBe(500);
   });
 });

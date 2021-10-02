@@ -1,9 +1,9 @@
 const request = require('supertest');
 const faker = require('faker');
-const app = require('../app');
-const { hashPassword } = require('../controllers/UserController');
-const { User } = require('../models');
-const createUserFactory = require('./factories/createUserFactory');
+const app = require('../../app');
+const { hashPassword } = require('../../controllers/UserController');
+const { User } = require('../../models');
+const createUserFactory = require('../factories/createUserFactory');
 
 describe('Authentication', () => {
   it('should authenticate with valid credentials', async () => {
