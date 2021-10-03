@@ -87,6 +87,9 @@ routes.get('/friend-request/sent', (request, response) =>
 routes.get('/friend-request/received', (request, response) =>
   UserController.getReceivedFriendRequests(request, response)
 );
+routes.get('/friend-request/received/total', (request, response) =>
+  UserController.getTotalReceivedFriendRequests(request, response)
+);
 routes.post(
   '/friend-request/accept',
   validator(acceptFriendRequestSchema),

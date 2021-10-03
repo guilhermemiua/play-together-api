@@ -602,9 +602,30 @@ class UserController {
         return response.status(200).send(receivedFriendRequests);
       }
 
-      const sentFriendRequests = await query;
+      const receivedFriendRequests = await query;
 
-      return response.status(200).send(sentFriendRequests);
+      return response.status(200).send(receivedFriendRequests);
+    } catch (error) {
+      console.log(error);
+      return response.status(500).send({ message: 'Internal server error' });
+    }
+  }
+
+  async getTotalReceivedFriendRequests(request, response) {
+    try {
+      const { userId } = request;
+
+      const user = await User.query().findById(userId);
+
+      if (!user) {
+        return response.status(404).send({ message: 'User not found' });
+      }
+
+      const query = FriendRequest.query().where('receiver_id', userId).count();
+
+      const total = await query;
+
+      return response.status(200).send(total[0]);
     } catch (error) {
       console.log(error);
       return response.status(500).send({ message: 'Internal server error' });
