@@ -333,11 +333,11 @@ class UserController {
         profile_image,
       });
 
-      if (file && user.profile_image) {
-        await fs.unlinkSync(
-          path.join(__dirname, `../../uploads/${user.profile_image}`)
-        );
-      }
+      // if (file && user.profile_image) {
+      //   await fs.unlinkSync(
+      //     path.join(__dirname, `../../uploads/${user.profile_image}`)
+      //   );
+      // }
 
       return response.status(200).send(updatedUser[0]);
     } catch (error) {
