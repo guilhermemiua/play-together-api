@@ -313,8 +313,6 @@ class UserController {
     try {
       const { first_name, last_name, age, gender, city_id, state_id } =
         request.body;
-      const { file } = request;
-      const profile_image = file ? file.filename : undefined;
       const { userId } = request;
 
       const user = await User.query().findById(userId);
@@ -330,7 +328,7 @@ class UserController {
         gender,
         city_id,
         state_id,
-        profile_image,
+        profile_image: request?.file ? request?.file.filename : undefined,
       });
 
       // if (file && user.profile_image) {
